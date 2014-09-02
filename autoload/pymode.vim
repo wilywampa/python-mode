@@ -30,7 +30,7 @@ fun! pymode#wide_message(msg) "{{{
     let x=&ruler | let y=&showcmd
     set noruler noshowcmd
     redraw
-    echohl Debug | echo strpart("[Pymode] " . a:msg, 0, &columns-1) | echohl none
+    echohl Statement | echo strpart("[Pymode] " . a:msg, 0, &columns-1) | echohl none
     let &ruler=x | let &showcmd=y
 endfunction "}}}
 
