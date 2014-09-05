@@ -30,7 +30,7 @@ endfunction "}}}
 
 fun! pymode#breakpoint#operate(lnum) "{{{
     call cursor(a:lnum, 0)
-    if search(join(split(g:pymode_breakpoint_cmd, "\r"), '.*\n.*'), 'cn') != 0
+    if search(join(split(g:pymode_breakpoint_cmd, "\r"), '.*\n.*'), 'cn') == a:lnum
         execute "normal ".len(split(g:pymode_breakpoint_cmd, "\r"))."dd"
     else
         let plnum = prevnonblank(a:lnum)
