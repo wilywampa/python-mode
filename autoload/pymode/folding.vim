@@ -14,6 +14,9 @@ endif
 
 
 fun! pymode#folding#text() " {{{
+    if &foldmethod !=# 'foldexpr' && &foldmethod !=# 'manual'
+        return foldtext()
+    endif
     let fs = v:foldstart
     while getline(fs) !~ s:def_regex && getline(fs) !~ s:doc_begin_regex
         let fs = nextnonblank(fs + 1)
