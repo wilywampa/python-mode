@@ -30,31 +30,35 @@ endfunction "}}}
 
 
 fun! pymode#motion#select(pattern, inner) "{{{
-    let cnt = v:count1 - 1
-    let orig = getpos('.')[1:2]
-    let snum = s:BlockStart(orig[0], a:pattern)
-    if getline(snum) !~ a:pattern
-        return 0
-    endif
-    let enum = s:BlockEnd(snum, indent(snum))
-    while cnt
-        let lnum = search(a:pattern, 'nW')
-        if lnum
-            let enum = s:BlockEnd(lnum, indent(lnum))
-            call cursor(enum, 1)
+    try
+        let cnt = v:count1 - 1
+        let orig = getpos('.')[1:2]
+        let snum = s:BlockStart(orig[0], a:pattern)
+        if getline(snum) !~ a:pattern
+            return 0
         endif
-        let cnt = cnt - 1
-    endwhile
-    if pymode#motion#pos_le([snum, 0], orig) && pymode#motion#pos_le(orig, [enum, 1])
-        if a:inner
-            let snum = snum + 1
-            let enum = prevnonblank(enum)
-        endif
+        let enum = s:BlockEnd(snum, indent(snum))
+        while cnt
+            let lnum = search(a:pattern, 'nW')
+            if lnum
+                let enum = s:BlockEnd(lnum, indent(lnum))
+                call cursor(enum, 1)
+            endif
+            let cnt = cnt - 1
+        endwhile
+        if pymode#motion#pos_le([snum, 0], orig) && pymode#motion#pos_le(orig, [enum, 1])
+            if a:inner
+                let snum = snum + 1
+                let enum = prevnonblank(enum)
+            endif
 
-        call cursor(snum, 1)
-        normal! v
-        call cursor(enum, len(getline(enum)))
-    endif
+            call cursor(snum, 1)
+            normal! v
+            call cursor(enum, len(getline(enum)))
+        endif
+    finally
+        echo
+    endtry
 endfunction "}}}
 
 
