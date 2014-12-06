@@ -61,9 +61,27 @@ function! pymode#indent#get_indent(lnum)
     let pline = getline(plnum)
     let sslnum = s:StatementStart(plnum)
 
-    " If the previous line is blank, keep the same indentation
+    " If the previous line is blank, keep the same indentation. If the current
+    " line is also blank, this is probably a new line in insert mode, so use
+    " the indent of the previous non-blank line's block start, unless the
+    " block start is a def/class that hasn't returned yet, then use the
+    " class/def indent plus one shiftwidth
     if pline =~ '^\s*$'
-        return -1
+        if getline(a:lnum) =~ '^\s*$'
+            let start = s:BlockStarter(prevnonblank(a:lnum),
+                \ '\v^\s*(class|def|elif|else|except|finally|for|if|try|while|with)>')
+            let start = max([start, searchpos('^\S', 'bcnW')])
+            if getline(start) =~ '\v^\s*(def|class)>' &&
+                \ searchpos('^\s*\(break\|continue\|raise\|return\|pass\)\>', 'bnW')[0] < start
+                return indent(start) + &shiftwidth
+            elseif getline(a:lnum - 2) =~ '^\s*$'
+                return indent(start) - &shiftwidth
+            else
+                return indent(start)
+            endif
+        else
+            return -1
+        endif
     endif
 
     " If this line is explicitly joined, find the first indentation that is a
@@ -87,7 +105,9 @@ function! pymode#indent#get_indent(lnum)
     endif
 
     " If the previous line was a stop-execution statement or a pass
-    if getline(sslnum) =~ '^\s*\(break\|continue\|raise\|return\|pass\)\>'
+    if getline(sslnum) =~# '^\s*\(break\|continue\|raise\|return\|pass\)\>'
+        \ && synIDattr(synID(sslnum, match(getline(sslnum),
+        \ '\(break\|continue\|raise\|return\|pass\)') + 1, 0), "name") !~ 'docstring'
         " See if the user has already dedented
         if indent(a:lnum) > indent(sslnum) - &sw
             " If not, recommend one dedent
@@ -97,8 +117,13 @@ function! pymode#indent#get_indent(lnum)
         return -1
     endif
 
-    " In all other cases, line up with the start of the previous statement.
-    return indent(sslnum)
+    " If the line is blank, line up with the start of the previous statement.
+    if thisline =~ '^\s*$'
+        return indent(sslnum)
+    endif
+
+    " In all other cases, trust the user.
+    return indent(a:lnum)
 endfunction
 
 
@@ -167,10 +192,10 @@ endfunction " }}}
 " Find the block starter that matches the current line
 function! s:BlockStarter(lnum, block_start_re) " {{{
     let lnum = a:lnum
-    let maxindent = 10000       " whatever
+    let maxindent = indent(prevnonblank(a:lnum))
     while lnum > 1
         let lnum = prevnonblank(lnum - 1)
-        if indent(lnum) < maxindent
+        if indent(lnum) <= maxindent
             if getline(lnum) =~ a:block_start_re
                 return lnum
             else
