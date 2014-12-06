@@ -4,9 +4,9 @@
 let s:def_regex = g:pymode_folding_regex
 let s:blank_regex = '^\s*$'
 let s:decorator_regex = '^\s*@'
-let s:doc_begin_regex = '^\s*\%("""\|''''''\)'
+let s:doc_begin_regex = '^\s*[rRuU]\?\%("""\|''''''\)'
 let s:doc_end_regex = '\%("""\|''''''\)\s*$'
-let s:doc_line_regex = '^\s*\("""\|''''''\).\+\1\s*$'
+let s:doc_line_regex = '^\s*[rRuU]\?\("""\|''''''\).\+\1\s*$'
 let s:symbol = matchstr(&fillchars, 'fold:\zs.')  " handles multibyte characters
 if s:symbol == ''
     let s:symbol = ' '
@@ -21,7 +21,7 @@ fun! pymode#folding#text() " {{{
     while getline(fs) !~ s:def_regex && getline(fs) !~ s:doc_begin_regex
         let fs = nextnonblank(fs + 1)
     endwhile
-    if getline(fs) =~ s:doc_begin_regex
+    if getline(fs) =~ s:doc_begin_regex && getline(fs) !~ '\("""\|''''''\).*\w'
         let fs = nextnonblank(fs + 1)
     endif
     let line = getline(fs)
@@ -67,12 +67,31 @@ fun! pymode#folding#expr(lnum) "{{{
         if decorated
             return '='
         else
-            return ">".(indent / &shiftwidth + 1)
+            " Don't fold if def is a single line
+            if indent(nextnonblank(a:lnum + 1)) > indent
+                return ">".(indent / &shiftwidth + 1)
+            else
+                return '='
+            endif
         endif
     endif
 
-    if line =~ s:doc_begin_regex && line !~ s:doc_line_regex && prev_line =~ s:def_regex
-        return ">".(indent / &shiftwidth + 1)
+    if line =~ s:doc_begin_regex && line !~ s:doc_line_regex && line !~ '\w.\+[rRuU]\?\%("""\|''''''\)\s*$'
+        let curpos = getpos('.')
+        try
+            call cursor(a:lnum, 0)
+            call search('\v\)\s*(\s*-\>.*)?:', 'bW')
+            normal! %^
+            if expand('<cword>') =~ 'class\|def'
+                let def_line = line('.')
+                let doc_begin_line = searchpos(s:doc_begin_regex, 'nW')[0]
+                if doc_begin_line == a:lnum
+                    return ">".(indent / &shiftwidth + 1)
+                endif
+            endif
+        finally
+            call setpos('.', curpos)
+        endtry
     endif
 
     if line =~ s:doc_end_regex && line !~ s:doc_line_regex
