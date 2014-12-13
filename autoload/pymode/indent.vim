@@ -14,6 +14,8 @@ function! pymode#indent#get_indent(lnum)
         return 0
     endif
 
+    let control_structure = '^\s*\(\(el\)\?if\|while\|for\s.*\sin\|except\)\s*'
+
     " If we can find an open parenthesis/bracket/brace, line up with it.
     call cursor(a:lnum, 1)
     let parlnum = s:SearchParensPair()
@@ -27,7 +29,12 @@ function! pymode#indent#get_indent(lnum)
                 return indent(parlnum) + &shiftwidth
             endif
         else
-            return parcol
+            if indent(a:lnum + 1) == parcol &&
+                \ match(getline(parlnum), control_structure) != -1
+                return parcol + &sw
+            else
+                return parcol
+            endif
         endif
     endif
 
@@ -88,7 +95,6 @@ function! pymode#indent#get_indent(lnum)
     " multiple of four and will distinguish itself from next logical line.
     if pline =~ '\\$'
         let maybe_indent = indent(sslnum) + &sw
-        let control_structure = '^\s*\(if\|while\|for\s.*\sin\|except\)\s*'
         if match(getline(sslnum), control_structure) != -1
             " add extra indent to avoid E125
             return maybe_indent + &sw
