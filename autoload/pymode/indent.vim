@@ -26,7 +26,12 @@ function! pymode#indent#get_indent(lnum)
             if closing_paren
                 return indent(parlnum)
             else
-                return indent(parlnum) + &shiftwidth
+                if indent(parend + 1) == indent(parlnum) + &shiftwidth &&
+                    \ match(getline(parlnum), control_structure) != -1
+                    return indent(parlnum) + 2 * &shiftwidth
+                else
+                    return indent(parlnum) + &shiftwidth
+                endif
             endif
         else
             if indent(parend + 1) == parcol &&
@@ -145,33 +150,40 @@ function! s:SearchParensPair() " {{{
 
     " Search for parentheses
     call cursor(line, col)
-    let [parlnum, parend] = searchpairpos('(', '', ')', 'bW', skip)
+    let parlnum = searchpair('(', '', ')', 'bW', skip)
     let parcol = col('.')
 
     " Search for brackets
     call cursor(line, col)
-    let [par2lnum, par2end] = searchpairpos('\[', '', '\]', 'bW', skip)
+    let par2lnum = searchpair('\[', '', '\]', 'bW', skip)
     let par2col = col('.')
 
     " Search for braces
     call cursor(line, col)
-    let [par3lnum, par3end] = searchpairpos('{', '', '}', 'bW', skip)
+    let par3lnum = searchpair('{', '', '}', 'bW', skip)
     let par3col = col('.')
 
     " Get the closest match
+    let open = '('
+    let close = ')'
     if par2lnum > parlnum || (par2lnum == parlnum && par2col > parcol)
         let parlnum = par2lnum
         let parcol = par2col
+        let open = '\['
+        let close = '\]'
     endif
     if par3lnum > parlnum || (par3lnum == parlnum && par3col > parcol)
         let parlnum = par3lnum
         let parcol = par3col
+        let open = '{'
+        let close = '}'
     endif
 
     " Put the cursor on the match
     if parlnum > 0
         call cursor(parlnum, parcol)
     endif
+    let parend = searchpair(open, '', close, 'n', skip)
     return [parlnum, parend]
 endfunction " }}}
 
