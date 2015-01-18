@@ -33,8 +33,8 @@ if g:pymode_motion
     vnoremap <buffer> [[  0:call pymode#motion#vmove('<Bslash>v^(class<bar>def)<Bslash>s', 'b')<CR>
     vnoremap <buffer> ]C  0:call pymode#motion#vmove('^<Bslash>s*class<Bslash>s', '')<CR>
     vnoremap <buffer> [C  0:call pymode#motion#vmove('^<Bslash>s*class<Bslash>s', 'b')<CR>
-    vnoremap <buffer> <expr> ]c &diff? "]c" 0: ":call pymode#motion#vmove('^\<Bslash>s*class\<Bslash>s', '')\<CR>"
-    vnoremap <buffer> <expr> [c &diff? "[c" 0: ":call pymode#motion#vmove('^\<Bslash>s*class\<Bslash>s', 'b')\<CR>"
+    vnoremap <buffer> <expr> ]c &diff? "]c" : "0:call pymode#motion#vmove('^\<Bslash>s*class\<Bslash>s', '')\<CR>"
+    vnoremap <buffer> <expr> [c &diff? "[c" : "0:call pymode#motion#vmove('^\<Bslash>s*class\<Bslash>s', 'b')\<CR>"
     vnoremap <buffer> ]m  0:call pymode#motion#vmove('^<Bslash>s*def<Bslash>s', '')<CR>
     vnoremap <buffer> [m  0:call pymode#motion#vmove('^<Bslash>s*def<Bslash>s', 'b')<CR>
     vnoremap <buffer> ]m  0:call pymode#motion#vmove('^<Bslash>s*def<Bslash>s', '')<CR>
