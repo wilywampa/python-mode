@@ -16,54 +16,54 @@ if g:pymode_motion
             \ '^\(class\|def\)\s',
             \ '^\ze.*\n\(class\|def\)\s', 0)
     catch /^Vim\%((\a\+)\)\=:E117/
-        nnoremap <buffer> ]]  :<C-U>call pymode#motion#move('<Bslash>v^(class<bar>def)<Bslash>s', '')<CR>
-        nnoremap <buffer> [[  :<C-U>call pymode#motion#move('<Bslash>v^(class<bar>def)<Bslash>s', 'b')<CR>
-        onoremap <buffer> ]]  :<C-U>call pymode#motion#move('<Bslash>v^(class<bar>def)<Bslash>s', '')<CR>
-        onoremap <buffer> [[  :<C-U>call pymode#motion#move('<Bslash>v^(class<bar>def)<Bslash>s', 'b')<CR>
-        vnoremap <buffer> ]]  0:call pymode#motion#vmove('<Bslash>v^(class<bar>def)<Bslash>s', '')<CR>
-        vnoremap <buffer> [[  0:call pymode#motion#vmove('<Bslash>v^(class<bar>def)<Bslash>s', 'b')<CR>
+        nnoremap <silent> <buffer> ]]  :<C-U>call pymode#motion#move('<Bslash>v^(class<bar>def)<Bslash>s', '')<CR>
+        nnoremap <silent> <buffer> [[  :<C-U>call pymode#motion#move('<Bslash>v^(class<bar>def)<Bslash>s', 'b')<CR>
+        onoremap <silent> <buffer> ]]  :<C-U>call pymode#motion#move('<Bslash>v^(class<bar>def)<Bslash>s', '')<CR>
+        onoremap <silent> <buffer> [[  :<C-U>call pymode#motion#move('<Bslash>v^(class<bar>def)<Bslash>s', 'b')<CR>
+        vnoremap <silent> <buffer> ]]  0:call pymode#motion#vmove('<Bslash>v^(class<bar>def)<Bslash>s', '')<CR>
+        vnoremap <silent> <buffer> [[  0:call pymode#motion#vmove('<Bslash>v^(class<bar>def)<Bslash>s', 'b')<CR>
     endtry
 
-    nnoremap <buffer> ]C :<C-U>call pymode#motion#move('<Bslash>v^<Bslash>s*class<Bslash>s', '')<CR>
-    nnoremap <buffer> [C :<C-U>call pymode#motion#move('<Bslash>v^<Bslash>s*class<Bslash>s', 'b')<CR>
-    nnoremap <buffer> <expr> ]c  &diff? "]c" : ":\<C-U>call pymode#motion#move('\<Bslash>v^\<Bslash>s*class\<Bslash>s', '')\<CR>"
-    nnoremap <buffer> <expr> [c  &diff? "[c" : ":\<C-U>call pymode#motion#move('\<Bslash>v^\<Bslash>s*class\<Bslash>s', 'b')\<CR>"
-    nnoremap <buffer> ]m  :<C-U>call pymode#motion#move('^<Bslash>s*def<Bslash>s', '')<CR>
-    nnoremap <buffer> [m  :<C-U>call pymode#motion#move('^<Bslash>s*def<Bslash>s', 'b')<CR>
+    nnoremap <silent> <buffer> ]C :<C-U>call pymode#motion#move('<Bslash>v^<Bslash>s*class<Bslash>s', '')<CR>
+    nnoremap <silent> <buffer> [C :<C-U>call pymode#motion#move('<Bslash>v^<Bslash>s*class<Bslash>s', 'b')<CR>
+    nnoremap <silent> <buffer> <expr> ]c  &diff? "]c" : ":\<C-U>call pymode#motion#move('\<Bslash>v^\<Bslash>s*class\<Bslash>s', '')\<CR>"
+    nnoremap <silent> <buffer> <expr> [c  &diff? "[c" : ":\<C-U>call pymode#motion#move('\<Bslash>v^\<Bslash>s*class\<Bslash>s', 'b')\<CR>"
+    nnoremap <silent> <buffer> ]m  :<C-U>call pymode#motion#move('^<Bslash>s*def<Bslash>s', '')<CR>
+    nnoremap <silent> <buffer> [m  :<C-U>call pymode#motion#move('^<Bslash>s*def<Bslash>s', 'b')<CR>
 
-    onoremap <buffer> ]C  :<C-U>call pymode#motion#move('<Bslash>v^<Bslash>s*class<Bslash>s', '')<CR>
-    onoremap <buffer> [C  :<C-U>call pymode#motion#move('<Bslash>v^<Bslash>s*class<Bslash>s', 'b')<CR>
-    onoremap <buffer> <expr> ]c  &diff? "]c" : ":\<C-U>call pymode#motion#move('\<Bslash>v^\<Bslash>s*class\<Bslash>s', '')\<CR>"
-    onoremap <buffer> <expr> [c  &diff? "[c" : ":\<C-U>call pymode#motion#move('\<Bslash>v^\<Bslash>s*class\<Bslash>s', 'b')\<CR>"
-    onoremap <buffer> ]m  :<C-U>call pymode#motion#move('^<Bslash>s*def<Bslash>s', '')<CR>
-    onoremap <buffer> [m  :<C-U>call pymode#motion#move('^<Bslash>s*def<Bslash>s', 'b')<CR>
+    onoremap <silent> <buffer> ]C  :<C-U>call pymode#motion#move('<Bslash>v^<Bslash>s*class<Bslash>s', '')<CR>
+    onoremap <silent> <buffer> [C  :<C-U>call pymode#motion#move('<Bslash>v^<Bslash>s*class<Bslash>s', 'b')<CR>
+    onoremap <silent> <buffer> <expr> ]c  &diff? "]c" : ":\<C-U>call pymode#motion#move('\<Bslash>v^\<Bslash>s*class\<Bslash>s', '')\<CR>"
+    onoremap <silent> <buffer> <expr> [c  &diff? "[c" : ":\<C-U>call pymode#motion#move('\<Bslash>v^\<Bslash>s*class\<Bslash>s', 'b')\<CR>"
+    onoremap <silent> <buffer> ]m  :<C-U>call pymode#motion#move('^<Bslash>s*def<Bslash>s', '')<CR>
+    onoremap <silent> <buffer> [m  :<C-U>call pymode#motion#move('^<Bslash>s*def<Bslash>s', 'b')<CR>
 
-    vnoremap <buffer> ]C  0:call pymode#motion#vmove('^<Bslash>s*class<Bslash>s', '')<CR>
-    vnoremap <buffer> [C  0:call pymode#motion#vmove('^<Bslash>s*class<Bslash>s', 'b')<CR>
-    vnoremap <buffer> <expr> ]c &diff? "]c" : "0:call pymode#motion#vmove('^\<Bslash>s*class\<Bslash>s', '')\<CR>"
-    vnoremap <buffer> <expr> [c &diff? "[c" : "0:call pymode#motion#vmove('^\<Bslash>s*class\<Bslash>s', 'b')\<CR>"
-    vnoremap <buffer> ]m  0:call pymode#motion#vmove('^<Bslash>s*def<Bslash>s', '')<CR>
-    vnoremap <buffer> [m  0:call pymode#motion#vmove('^<Bslash>s*def<Bslash>s', 'b')<CR>
-    vnoremap <buffer> ]m  0:call pymode#motion#vmove('^<Bslash>s*def<Bslash>s', '')<CR>
-    vnoremap <buffer> [m  0:call pymode#motion#vmove('^<Bslash>s*def<Bslash>s', 'b')<CR>
+    vnoremap <silent> <buffer> ]C  0:call pymode#motion#vmove('^<Bslash>s*class<Bslash>s', '')<CR>
+    vnoremap <silent> <buffer> [C  0:call pymode#motion#vmove('^<Bslash>s*class<Bslash>s', 'b')<CR>
+    vnoremap <silent> <buffer> <expr> ]c &diff? "]c" : "0:call pymode#motion#vmove('^\<Bslash>s*class\<Bslash>s', '')\<CR>"
+    vnoremap <silent> <buffer> <expr> [c &diff? "[c" : "0:call pymode#motion#vmove('^\<Bslash>s*class\<Bslash>s', 'b')\<CR>"
+    vnoremap <silent> <buffer> ]m  0:call pymode#motion#vmove('^<Bslash>s*def<Bslash>s', '')<CR>
+    vnoremap <silent> <buffer> [m  0:call pymode#motion#vmove('^<Bslash>s*def<Bslash>s', 'b')<CR>
+    vnoremap <silent> <buffer> ]m  0:call pymode#motion#vmove('^<Bslash>s*def<Bslash>s', '')<CR>
+    vnoremap <silent> <buffer> [m  0:call pymode#motion#vmove('^<Bslash>s*def<Bslash>s', 'b')<CR>
 
-    onoremap <buffer> C  :<C-U>call pymode#motion#select('^<Bslash>s*class<Bslash>s', 0)<CR>
-    onoremap <buffer> ac :<C-U>call pymode#motion#select('^<Bslash>s*class<Bslash>s', 0)<CR>
-    onoremap <buffer> ic :<C-U>call pymode#motion#select('^<Bslash>s*class<Bslash>s', 1)<CR>
-    vnoremap <buffer> ac 0:<C-U>call pymode#motion#select('^<Bslash>s*class<Bslash>s', 0)<CR>
-    vnoremap <buffer> ic 0:<C-U>call pymode#motion#select('^<Bslash>s*class<Bslash>s', 1)<CR>
+    onoremap <silent> <buffer> C  :<C-U>call pymode#motion#select('^<Bslash>s*class<Bslash>s', 0)<CR>
+    onoremap <silent> <buffer> ac :<C-U>call pymode#motion#select('^<Bslash>s*class<Bslash>s', 0)<CR>
+    onoremap <silent> <buffer> ic :<C-U>call pymode#motion#select('^<Bslash>s*class<Bslash>s', 1)<CR>
+    vnoremap <silent> <buffer> ac 0:<C-U>call pymode#motion#select('^<Bslash>s*class<Bslash>s', 0)<CR>
+    vnoremap <silent> <buffer> ic 0:<C-U>call pymode#motion#select('^<Bslash>s*class<Bslash>s', 1)<CR>
 
-    onoremap <buffer> M  :<C-U>call pymode#motion#select('^<Bslash>s*def<Bslash>s', 0)<CR>
-    onoremap <buffer> am :<C-U>call pymode#motion#select('^<Bslash>s*def<Bslash>s', 0)<CR>
-    onoremap <buffer> im :<C-U>call pymode#motion#select('^<Bslash>s*def<Bslash>s', 1)<CR>
-    vnoremap <buffer> am 0:<C-U>call pymode#motion#select('^<Bslash>s*def<Bslash>s', 0)<CR>
-    vnoremap <buffer> im 0:<C-U>call pymode#motion#select('^<Bslash>s*def<Bslash>s', 1)<CR>
+    onoremap <silent> <buffer> M  :<C-U>call pymode#motion#select('^<Bslash>s*def<Bslash>s', 0)<CR>
+    onoremap <silent> <buffer> am :<C-U>call pymode#motion#select('^<Bslash>s*def<Bslash>s', 0)<CR>
+    onoremap <silent> <buffer> im :<C-U>call pymode#motion#select('^<Bslash>s*def<Bslash>s', 1)<CR>
+    vnoremap <silent> <buffer> am 0:<C-U>call pymode#motion#select('^<Bslash>s*def<Bslash>s', 0)<CR>
+    vnoremap <silent> <buffer> im 0:<C-U>call pymode#motion#select('^<Bslash>s*def<Bslash>s', 1)<CR>
 
-    onoremap <buffer> I  :<C-U>call pymode#motion#select('<Bslash>v^<Bslash>s*(class<Bar>def<Bar>elif<Bar>else<Bar>except<Bar>finally<Bar>for<Bar>if<Bar>try<Bar>while<Bar>with)>', 0)<CR>
-    onoremap <buffer> ai :<C-U>call pymode#motion#select('<Bslash>v^<Bslash>s*(class<Bar>def<Bar>elif<Bar>else<Bar>except<Bar>finally<Bar>for<Bar>if<Bar>try<Bar>while<Bar>with)>', 0)<CR>
-    onoremap <buffer> ii :<C-U>call pymode#motion#select('<Bslash>v^<Bslash>s*(class<Bar>def<Bar>elif<Bar>else<Bar>except<Bar>finally<Bar>for<Bar>if<Bar>try<Bar>while<Bar>with)>', 1)<CR>
-    vnoremap <buffer> ai 0:<C-U>call pymode#motion#select('<Bslash>v^<Bslash>s*(class<Bar>def<Bar>elif<Bar>else<Bar>except<Bar>finally<Bar>for<Bar>if<Bar>try<Bar>while<Bar>with)>', 0)<CR>
-    vnoremap <buffer> ii 0:<C-U>call pymode#motion#select('<Bslash>v^<Bslash>s*(class<Bar>def<Bar>elif<Bar>else<Bar>except<Bar>finally<Bar>for<Bar>if<Bar>try<Bar>while<Bar>with)>', 1)<CR>
+    onoremap <silent> <buffer> I  :<C-U>call pymode#motion#select('<Bslash>v^<Bslash>s*(class<Bar>def<Bar>elif<Bar>else<Bar>except<Bar>finally<Bar>for<Bar>if<Bar>try<Bar>while<Bar>with)>', 0)<CR>
+    onoremap <silent> <buffer> ai :<C-U>call pymode#motion#select('<Bslash>v^<Bslash>s*(class<Bar>def<Bar>elif<Bar>else<Bar>except<Bar>finally<Bar>for<Bar>if<Bar>try<Bar>while<Bar>with)>', 0)<CR>
+    onoremap <silent> <buffer> ii :<C-U>call pymode#motion#select('<Bslash>v^<Bslash>s*(class<Bar>def<Bar>elif<Bar>else<Bar>except<Bar>finally<Bar>for<Bar>if<Bar>try<Bar>while<Bar>with)>', 1)<CR>
+    vnoremap <silent> <buffer> ai 0:<C-U>call pymode#motion#select('<Bslash>v^<Bslash>s*(class<Bar>def<Bar>elif<Bar>else<Bar>except<Bar>finally<Bar>for<Bar>if<Bar>try<Bar>while<Bar>with)>', 0)<CR>
+    vnoremap <silent> <buffer> ii 0:<C-U>call pymode#motion#select('<Bslash>v^<Bslash>s*(class<Bar>def<Bar>elif<Bar>else<Bar>except<Bar>finally<Bar>for<Bar>if<Bar>try<Bar>while<Bar>with)>', 1)<CR>
 
 endif
 
