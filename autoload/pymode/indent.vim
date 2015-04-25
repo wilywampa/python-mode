@@ -82,7 +82,7 @@ function! pymode#indent#get_indent(lnum)
         if getline(a:lnum) =~ '^\s*$'
             let start = s:BlockStarter(prevnonblank(a:lnum),
                 \ '\v^\s*(class|def|elif|else|except|finally|for|if|try|while|with)>')
-            let start = max([start, searchpos('^\S', 'bcnW')])
+            let start = max([start, searchpos('^\S', 'bcnW')[0]])
             if getline(start) =~ '\v^\s*(def|class)>' &&
                 \ searchpos('^\s*\(break\|continue\|raise\|return\|pass\)\>', 'bnW')[0] < start
                 return indent(start) + &shiftwidth
