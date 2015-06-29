@@ -156,6 +156,10 @@ fun! pymode#folding#expr(lnum) "{{{
         endif
     endif
 
+    if indent == 0
+        return 0
+    endif
+
     return '='
 
 endfunction "}}}
