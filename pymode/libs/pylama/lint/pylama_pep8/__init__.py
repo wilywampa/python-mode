@@ -19,6 +19,7 @@ class Linter(BaseLinter):
         :return list: List of errors.
 
         """
+        params.update(meta)
         P8Style = StyleGuide(reporter=_PEP8Report, **params)
         buf = StringIO(code)
         return P8Style.input_file(path, lines=buf.readlines())
