@@ -13,8 +13,8 @@ if g:pymode_motion
 
     try
         call CountJump#Motion#MakeBracketMotion('<buffer>', '', '',
-            \ '^\(class\|def\)\s',
-            \ '^\ze.*\n\(class\|def\)\s', 0)
+            \ '^\(class\|\(cp\?\)\?def\)\s',
+            \ '^\ze.*\n\(class\|\(cp\?\)\?def\)\s', 0)
     catch /^Vim\%((\a\+)\)\=:E117/
         nnoremap <silent> <buffer> ]]  :<C-U>call pymode#motion#move('<Bslash>v^(class<bar>def)<Bslash>s', '')<CR>
         nnoremap <silent> <buffer> [[  :<C-U>call pymode#motion#move('<Bslash>v^(class<bar>def)<Bslash>s', 'b')<CR>
