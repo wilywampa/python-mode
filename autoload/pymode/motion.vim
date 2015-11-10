@@ -3,10 +3,10 @@
 
 fun! pymode#motion#move(pattern, flags, ...) "{{{
     let cnt = v:count1 - 1
-    let [line, column] = searchpos(a:pattern, a:flags . 'sW')
+    let [line, column] = searchpos('\C' . a:pattern, a:flags . 'sW')
     let indent = indent(line)
     while cnt && line
-        let [line, column] = searchpos(a:pattern, a:flags . 'W')
+        let [line, column] = searchpos('\C' . a:pattern, a:flags . 'W')
         if indent(line) == indent
             let cnt = cnt - 1
         endif
