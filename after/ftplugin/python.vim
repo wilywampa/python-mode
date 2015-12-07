@@ -13,7 +13,7 @@ if g:pymode_motion
 
     try
         call CountJump#Motion#MakeBracketMotion('<buffer>', '', '',
-            \ '\v\C^\s*(class|%[cp]def)\s',
+            \ '\v\C^\s*\zs(class|%[cp]def)\s',
             \ '\v\C\ze.*\n\s*(class|%[cp]def)\s', 0)
         call CountJump#Motion#MakeBracketMotion('<buffer>',
             \ '<Plug>TopLevelBegin%s', '<Plug>TopLevelEnd%s',
@@ -26,13 +26,13 @@ if g:pymode_motion
             execute mode.'map <buffer> ]{ <Plug>TopLevelEndForward'
         endfor
     catch
+        nnoremap <silent> <buffer> ]]  :<C-U>call pymode#motion#move('<Bslash>v^<Bslash>s*(class<bar>%[cp]def)<Bslash>s', '')<CR>
+        nnoremap <silent> <buffer> [[  :<C-U>call pymode#motion#move('<Bslash>v^<Bslash>s*(class<bar>%[cp]def)<Bslash>s', 'b')<CR>
+        onoremap <silent> <buffer> ]]  :<C-U>call pymode#motion#move('<Bslash>v^<Bslash>s*(class<bar>%[cp]def)<Bslash>s', '')<CR>
+        onoremap <silent> <buffer> [[  :<C-U>call pymode#motion#move('<Bslash>v^<Bslash>s*(class<bar>%[cp]def)<Bslash>s', 'b')<CR>
+        vnoremap <silent> <buffer> ]]  0:call pymode#motion#vmove('<Bslash>v^<Bslash>s*(class<bar>%[cp]def)<Bslash>s', '')<CR>
+        vnoremap <silent> <buffer> [[  0:call pymode#motion#vmove('<Bslash>v^<Bslash>s*(class<bar>%[cp]def)<Bslash>s', 'b')<CR>
     endtry
-    nnoremap <silent> <buffer> ]]  :<C-U>call pymode#motion#move('<Bslash>v^<Bslash>s*(class<bar>%[cp]def)<Bslash>s', '')<CR>
-    nnoremap <silent> <buffer> [[  :<C-U>call pymode#motion#move('<Bslash>v^<Bslash>s*(class<bar>%[cp]def)<Bslash>s', 'b')<CR>
-    onoremap <silent> <buffer> ]]  :<C-U>call pymode#motion#move('<Bslash>v^<Bslash>s*(class<bar>%[cp]def)<Bslash>s', '')<CR>
-    onoremap <silent> <buffer> [[  :<C-U>call pymode#motion#move('<Bslash>v^<Bslash>s*(class<bar>%[cp]def)<Bslash>s', 'b')<CR>
-    vnoremap <silent> <buffer> ]]  0:call pymode#motion#vmove('<Bslash>v^<Bslash>s*(class<bar>%[cp]def)<Bslash>s', '')<CR>
-    vnoremap <silent> <buffer> [[  0:call pymode#motion#vmove('<Bslash>v^<Bslash>s*(class<bar>%[cp]def)<Bslash>s', 'b')<CR>
 
     nnoremap <silent> <buffer> ]C :<C-U>call pymode#motion#move('<Bslash>v^<Bslash>s*class<Bslash>s', '')<CR>
     nnoremap <silent> <buffer> [C :<C-U>call pymode#motion#move('<Bslash>v^<Bslash>s*class<Bslash>s', 'b')<CR>
