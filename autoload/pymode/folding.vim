@@ -86,9 +86,8 @@ fun! pymode#folding#expr(lnum) "{{{
         try
             call cursor(a:lnum, 0)
             call search('\v\)\s*(\s*-\>.*)?:', 'bW')
-            normal! %^
-            if expand('<cword>') =~ 'class\|def'
-                let def_line = line('.')
+            let [startline, _] = searchpairpos('(', '', ')', 'b')
+            if getline(startline) =~ s:def_regex
                 let doc_begin_line = searchpos(s:doc_begin_regex, 'nW')[0]
                 if doc_begin_line == a:lnum
                     return ">".(indent / &shiftwidth + 1)
