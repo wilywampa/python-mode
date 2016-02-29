@@ -140,29 +140,22 @@ endfunction
 
 " Find backwards the closest open parenthesis/bracket/brace.
 function! s:SearchParensPair() " {{{
-    let line = line('.')
-    let col = col('.')
+    let [bufnum, line, col, off] = getpos('.')
+    let stopline = max([1, line - 50])
 
-    " Skip strings and comments and don't look too far
-    let skip = "line('.') < " . (line - 50) . " ? dummy :" .
-                \ '(getline(".") =~ "^\\s*#" || '.
-                \ 'synIDattr(synID(line("."), col("."), 0), "name") =~? ' .
-                \ '"string\\|comment\\|doctest")'
+    " Skip strings and comments
+    let skip = 'getline(".") =~ "^\\s*#" || '.
+        \ 'synIDattr(synID(line("."), col("."), 0), "name") =~? ' .
+        \ '"string\\|comment\\|doctest"'
 
     " Search for parentheses
-    call cursor(line, col)
-    let parlnum = searchpair('(', '', ')', 'bW', skip)
-    let parcol = col('.')
+    let [parlnum, parcol] = searchpairpos('(', '', ')', 'bnW', skip, stopline)
 
     " Search for brackets
-    call cursor(line, col)
-    let par2lnum = searchpair('\[', '', '\]', 'bW', skip)
-    let par2col = col('.')
+    let [par2lnum, par2col] = searchpairpos('\[', '', '\]', 'bnW', skip, stopline)
 
     " Search for braces
-    call cursor(line, col)
-    let par3lnum = searchpair('{', '', '}', 'bW', skip)
-    let par3col = col('.')
+    let [par3lnum, par3col] = searchpairpos('{', '', '}', 'bnW', skip, stopline)
 
     " Get the closest match
     let open = '('
@@ -184,7 +177,7 @@ function! s:SearchParensPair() " {{{
     if parlnum > 0
         call cursor(parlnum, parcol)
     endif
-    let parend = searchpair(open, '', close, 'n', skip)
+    let parend = searchpair(open, '', close, 'n', skip, stopline)
     return [parlnum, parend]
 endfunction " }}}
 
