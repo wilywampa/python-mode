@@ -36,7 +36,7 @@ fun! pymode#folding#text() " {{{
     let line = substitute(line, '\t', onetab, 'g')
 
     let line = strpart(line, 0, windowwidth - 2 -len(foldedlinecount))
-    let line = substitute(line, '\%("""\|''''''\)', '', '')
+    let line = substitute(line, '\%([rR]\?[uU]\?\%("""\|''''''\)\)', '', '')
     let fillcharcount = windowwidth - len(line) - len(foldedlinecount) + 1
     return line . ' ' . repeat(s:symbol, fillcharcount) . ' ' . foldedlinecount
 endfunction "}}}
