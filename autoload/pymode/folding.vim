@@ -2,11 +2,8 @@
 
 " Notice that folding is based on single line so complex regular expressions
 " that take previous line into consideration are not fit for the job.
-" Also notice that vim starts processing lines from 1 until the last line.
-" using global variables to track down states may not be accurate once the
-" file is being edited.
 
-"" REGEX DEFINITIONS {{{
+" Regex definitions for correct folding
 let s:def_regex = g:pymode_folding_regex
 let s:blank_regex = '^\s*$'
 let s:decorator_regex = '^\s*@\s*\w*\s*\((\|$\)' 
@@ -22,10 +19,6 @@ if s:symbol == ''
 endif
 " ''''''''
 
-"" CONSTANT DEFINITIONS {{{
-" Maximum number of lines to search to know if current line is a docstring.
-let s:max_line_scan = 150
-" }}}
 
 fun! pymode#folding#text() " {{{
     if &foldmethod !=# 'foldexpr' && &foldmethod !=# 'manual'
@@ -50,7 +43,7 @@ fun! pymode#folding#text() " {{{
     let line = substitute(line, '\t', onetab, 'g')
 
     let line = strpart(line, 0, windowwidth - 2 -len(foldedlinecount))
-    let line = substitute(line, '\c\%([fru]*\%("""\|''''''\)\)', '', '')
+    let line = substitute(line, '\%([fFuUrR]*\%("""\|''''''\)\)', '', '')
     let fillcharcount = windowwidth - len(line) - len(foldedlinecount) + 1
     return line . ' ' . repeat(s:symbol, fillcharcount) . ' ' . foldedlinecount
 endfunction "}}}
@@ -102,36 +95,26 @@ fun! pymode#folding#expr(lnum) "{{{
 
     " Docstrings {{{
 
-    if line =~ s:doc_general_regex
-        let docstring_description = s:DescribeDocstring(a:lnum)
-
-        if docstring_description['is_docstring']
-            " First case: one liners. {{{
-            "
-            " Notice that an effect of this is that other docstring matches will not
-            " be one liners.
-            if docstring_description['docstring_type'] == 'single_line'
-                return "="
-            " }}}
-
-            " Second case: multi liners. {{{
-            "
-            " Aside from knowing that it is a docstring we need to know if it is
-            " a opening docstring or closing because they either open or closes the
-            " folding.
-            elseif docstring_description['docstring_type'] == 'multi_line' ||
-                  \ docstring_description['docstring_type'] == 'module'
-                if docstring_description['is_starting_docstring']
+    if line =~ s:doc_begin_regex && line !~ s:doc_line_regex && line !~ '\w.\+[fFrRuU]\?\%("""\|''''''\)\s*$'
+        let curpos = getpos('.')
+        try
+            call cursor(a:lnum, 0)
+            call search('\v\)\s*(\s*-\>.*)?:', 'bW')
+            let [startline, _] = searchpairpos('(', '', ')', 'b')
+            if getline(startline) =~ s:def_regex
+                let doc_begin_line = searchpos(s:doc_begin_regex, 'nW')[0]
+                if doc_begin_line == a:lnum
                     return ">".(indent / &shiftwidth + 1)
-                else
-                    return "<".(indent / &shiftwidth + 1)
-                endif "}}}
-            else
+                endif
             endif
-        endif
+        finally
+            call setpos('.', curpos)
+        endtry
     endif
 
-    " }}}
+    if line =~ s:doc_end_regex && line !~ s:doc_line_regex
+        return "<".(indent / &shiftwidth + 1)
+    endif
 
     " Nested Definitions {{{
     " Handle nested defs but only for files shorter than
@@ -184,7 +167,13 @@ fun! pymode#folding#expr(lnum) "{{{
     if line =~ s:blank_regex
         if prev_line =~ s:blank_regex
             if indent(a:lnum + 1) == 0 && next_line !~ s:blank_regex && next_line !~ s:doc_general_regex
+                if s:Is_opening_folding(a:lnum)
+                    " echom a:lnum
+                    return "="
+                else
+                    " echom "not " . a:lnum
                     return 0
+                endif
             endif
             return -1
         else
@@ -192,195 +181,14 @@ fun! pymode#folding#expr(lnum) "{{{
         endif
     endif " }}}
 
+    if indent == 0
+        return 0
+    endif
+
     return '='
 
 endfunction "}}}
 
-" Auxiliar functions {{{
-" Docstring auxiliar functions. {{{
-function! s:DescribeDocstring(lnum) " {{{
-    " Return a dictionary describing the docstring.
-    "
-    " What characterizes a docstring? It is a triple quoted string that
-    " follows a definition (such as a function or class).
-    "
-    " To search for a docstring is no simple issue. Strings declared with
-    " triple quotes could be arguments inside a function. Example:
-    " >>> print(
-    " '''This is not a docstring.
-    "
-    " Indeed not.
-    " '''
-    " )
-    "
-    " Returns: 
-    "   dict: a dictionary with the following keys:
-    "       - is_docstring (bool): v:true if docstring. v:false if not
-    "       - docstring_type (bool): 
-    "           'single_line' if it is a single line docstring.
-    "           'multi_line' if it is a multi line docstring.
-    "           'module' if it is a module line docstring.
-    "       - is_starting_docstring (bool):
-    "           v:true if is a starting docstring.
-    "           v:false if is an ending docstring.
-
-    let line = getline(a:lnum)
-    let return_dict = {'is_docstring': v:null,
-        \ 'docstring_type': v:null,
-        \ 'is_starting_docstring': v:null}
-    let max_scan_lines = 150
-
-    " Case 01: it is not a docstring.
-    if line !~ s:doc_begin_regex
-       if line !~ s:doc_end_regex
-            let return_dict['is_docstring'] = v:false
-            return return_dict
-        endif
-    endif
-
-    
-    " Case 02: it is a single line docstring.
-    if line =~ s:doc_line_regex
-        let return_dict['is_docstring'] = v:true
-        let return_dict['docstring_type'] = 'single_line'
-        return return_dict
-    else
-        let return_dict['docstring_type'] = 'multi_line'
-    endif
-
-    " Case 03: it is a multi line docstring.
-    let prev_line = getline(a:lnum - 1)
-    " Is a starting docstring.
-    if s:IsStartingDocstring(a:lnum)
-        let return_dict['is_docstring'] = v:true
-        let return_dict['is_starting_docstring'] = v:true
-        return return_dict
-    " Is not a starting docstring.
-    else
-        " Covers the case of a 'non' is_starting_docstring but it has to have
-        " an ending docstring.
-        if s:IsEndingDocstring(a:lnum)
-            let return_dict['is_docstring'] = v:true
-            let return_dict['is_starting_docstring'] = v:false
-            return return_dict
-        else
-            let return_dict['is_docstring'] = v:false
-        endif
-    endif
-endfunction " }}}
-function! s:IsModuleDocstring(lnum) " {{{
-    " Return v:true if it is a module docstring, v:false otherwise.
-    if a:lnum == 1
-        return v:true
-    else
-        return v:false
-    endif
-endfunction " }}}
-function! s:IsStartingDocstring(lnum) " {{{
-    " Return v:true if it is a starting docstring, v:false otherwise.
-    
-    let prev_line = getline(a:lnum - 1)
-    if s:IsDefinitionStatement(a:lnum - 1) || s:IsModuleDocstring(a:lnum)
-        return v:true
-    " Is a starting docstring.
-    elseif prev_line =~ s:blank_regex && s:IsDefinitionStatement(a:lnum - 2)
-        return v:true
-    else
-        return v:false
-endfunction " }}}
-function! s:IsEndingDocstring(lnum) " {{{
-    " Return v:true if it is an ending docstring, v:false otherwise.
-    
-    let i = -1
-    let line = getline(a:lnum + i)
-    let max_scan_lines = 50
-
-    while ! s:IsStartingDocstring(a:lnum + i)
-        if max_scan_lines + i < 0 || getline(a:lnum + i) =~ s:doc_end_regex
-            return v:false
-        endif
-        let i = i - 1
-        let line = getline(a:lnum + i)
-    endwhile
-
-        return v:true
-    
-endfunction " }}}
-" }}}
-
-" Definition Statements auxiliar functions. {{{
-" }}}
-function! s:IsDefinitionStatement(lnum) "{{{
-    " Return a v:true if line is part of a definition statement.
-    "
-    " If this line is between matching parenthesis for def statement then
-    " it is also a a definition statement.
-    "
-    " Returns:
-    "   bool: v:true if it is part of a definition statement, v:false
-    "         otherwise.
-
-    " Cache the result
-    if get(b:, 'fold_changenr', -1) == changenr()
-        if has_key(b:fold_cache, a:lnum)
-            return b:fold_cache[a:lnum]  "If odd then it is an opening
-        endif
-    else
-        let b:fold_changenr = changenr()
-        let b:fold_cache = {}
-    endif
-
-    let line = getline(a:lnum)
-
-    " Obvious case: is an inline definition statement.
-    if line =~ s:def_regex
-        return s:SetCache(a:lnum, v:true)
-    endif
-        
-    " Store current cursor position to be restored later.
-    let save_cursor = getcurpos()
-    let off_number = 1  " Dummy number for now.
-    let max_scan_lines = 50
-    let end_multiline_def_regex = '):\s*$'
-    let i = 0
-
-    while (line !~ s:def_regex && line !~ end_multiline_def_regex)
-        if i > max_scan_lines
-            return s:SetCache(a:lnum, v:false)
-        endif
-        let i = i + 1
-        let line = getline(a:lnum + i)
-    endwhile
-    if line =~ s:def_regex
-        return s:SetCache(a:lnum, v:false)
-    elseif line =~ end_multiline_def_regex
-        " Use 'searchpairpos()' to find the matching parenthesis.
-        "   flags:
-        "       b: backwards
-        "       W: don't wrap around the file
-        call setpos('.', [0, a:lnum, 1, off_number])
-        let matching_position = searchpairpos( '(', '', ')', 'bW')
-        call setpos('.', [0] + matching_position + [off_number])
-        if getline('.') =~ s:def_regex
-            call setpos('.', save_cursor)
-            return s:SetCache(a:lnum, v:true)
-        else
-            call setpos('.', save_cursor)
-            return s:SetCache(a:lnum, v:false)
-        endif
-    endif
-
-
-    " Put cursor back in corrected position.
-endfunction "}}}
-function! s:SetCache(lnum, value) "{{{
-    " Simple function to add a line to the cache then return the value
-    let b:fold_cache[a:lnum] = a:value
-    return a:value
-endfunction "}}}
-" }}}
-
-" Other auxiliar functions {{{
 fun! s:BlockStart(lnum) "{{{
     " Note: Make sure to reset cursor position after using this function.
     call cursor(a:lnum, 0)
@@ -406,12 +214,68 @@ fun! s:BlockStart(lnum) "{{{
     endif
     return searchpos('\v^\s{,'.max_indent.'}(def |class )\w', 'bcnW')[0]
 endfunction "}}}
+
 fun! s:BlockEnd(lnum) "{{{
     " Note: Make sure to reset cursor position after using this function.
     call cursor(a:lnum, 0)
     return searchpos('\v^\s{,'.indent('.').'}\S', 'nW')[0] - 1
 endfunction "}}}
-" }}}
-" }}}
+
+function! s:Is_opening_folding(lnum) "{{{
+    " Helper function to see if docstring is opening or closing
+
+    " Cache the result so the loop runs only once per change
+    if get(b:, 'fold_changenr', -1) == changenr()
+        return b:fold_cache[a:lnum]  "If odd then it is an opening
+    else
+        let b:fold_changenr = changenr()
+        let b:fold_cache = []
+    endif
+
+    let number_of_folding = 0  " To be analized if odd/even to inform if it is opening or closing.
+    let has_open_docstring = 0  " To inform is already has an open docstring.
+    let extra_docstrings = 0  " To help skipping ''' and """ which are not docstrings
+
+    " The idea of this part of the function is to identify real docstrings and
+    " not just triple quotes (that could be a regular string).
+    "
+    " Iterater over all lines from the start until current line (inclusive)
+    for i in range(1, line('$'))
+        call add(b:fold_cache, number_of_folding % 2)
+
+        let i_line = getline(i)
+
+        if i_line =~ s:doc_line_regex 
+            " echom "case 00 on line " . i
+            continue
+        endif
+
+        if i_line =~ s:doc_begin_regex && ! has_open_docstring
+            " echom "case 01 on line " . i
+            " This causes the loop to continue if there is a triple quote which
+            " is not a docstring.
+            if extra_docstrings > 0
+                let extra_docstrings = extra_docstrings - 1
+                continue
+            else
+                let has_open_docstring = 1
+                let number_of_folding = number_of_folding + 1
+            endif
+        " If it is an end doc and has an open docstring.
+        elseif i_line =~ s:doc_end_regex && has_open_docstring
+            " echom "case 02 on line " . i
+            let has_open_docstring = 0
+            let number_of_folding = number_of_folding + 1
+
+        elseif i_line =~ s:doc_general_regex
+            " echom "extra docstrings on line " . i
+            let extra_docstrings = extra_docstrings + 1
+        endif 
+    endfor
+
+    call add(b:fold_cache, number_of_folding % 2)
+
+    return b:fold_cache[a:lnum]
+endfunction "}}}
 
 " vim: fdm=marker:fdl=0
