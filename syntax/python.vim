@@ -104,7 +104,7 @@ endif
     syn keyword pythonException     try except finally
     syn keyword pythonOperator      and in is not or
 
-    syn match pythonExtraOperator "\%([~!^&|/%+-]\|\%(class\s*\)\@<!<<\|<=>\|<=\|\%(<\|\<class\s\+\u\w*\s*\)\@<!<[^<]\@=\|===\|==\|=\~\|>>\|>=\|=\@<!>\|\.\.\.\|\.\.\|::\)"
+    syn match pythonExtraOperator "\%([~!^&|/%+-@]\|\%(class\s*\)\@<!<<\|<=>\|<=\|\%(<\|\<class\s\+\u\w*\s*\)\@<!<[^<]\@=\|===\|==\|=\~\|>>\|>=\|=\@<!>\|\.\.\.\|\.\.\|::\)"
     syn match pythonExtraPseudoOperator "\%(-=\|/=\|\*\*=\|\*=\|&&=\|&=\|&&\|||=\||=\|||\|%=\|+=\|!\~\|!=\)"
 
     if !g:pymode_syntax_print_as_function
@@ -136,7 +136,7 @@ endif
 " Decorators {{{
 " ==============
 
-    syn match   pythonDecorator "@" display nextgroup=pythonDottedName skipwhite
+    syn match   pythonDecorator "^\s*@" display nextgroup=pythonDottedName skipwhite
     syn match   pythonDottedName "[a-zA-Z_][a-zA-Z0-9_]*\(\.[a-zA-Z_][a-zA-Z0-9_]*\)*" display contained
     syn match   pythonDot        "\." display containedin=pythonDottedName
 
