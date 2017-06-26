@@ -6,13 +6,15 @@
 " Regex definitions for correct folding
 let s:def_regex = g:pymode_folding_regex
 let s:blank_regex = '^\s*$'
+" Spyder, a very popular IDE for python has a template which includes
+" '@author:' ; thus the regex below.
 let s:decorator_regex = '^\s*@\s*\w*\s*\((\|$\)' 
-let s:doc_begin_regex = '^\s*[uU]\=\%("""\|''''''\)'
+let s:doc_begin_regex = '^\s*[uUrR]\=\%("""\|''''''\)'
 let s:doc_end_regex = '\%("""\|''''''\)\s*$'
 " This one is needed for the while loop to count for opening and closing
 " docstrings.
 let s:doc_general_regex = '\%("""\|''''''\)'
-let s:doc_line_regex = '^\s*[uU]\=\("""\|''''''\).\+\1\s*$'
+let s:doc_line_regex = '^\s*[uUrR]\=\("""\|''''''\).\+\1\s*$'
 let s:symbol = matchstr(&fillchars, 'fold:\zs.')  " handles multibyte characters
 if s:symbol == ''
     let s:symbol = ' '
