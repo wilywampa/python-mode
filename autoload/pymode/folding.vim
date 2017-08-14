@@ -8,7 +8,7 @@ let s:def_regex = g:pymode_folding_regex
 let s:blank_regex = '^\s*$'
 " Spyder, a very popular IDE for python has a template which includes
 " '@author:' ; thus the regex below.
-let s:decorator_regex = '^\s*@\(author:\)\@!' 
+let s:decorator_regex = '^\s*@\s*\w*\s*\((\|$\)'
 let s:doc_begin_regex = '^\s*[uUrR]\=\%("""\|''''''\)'
 let s:doc_end_regex = '\%("""\|''''''\)\s*$'
 " This one is needed for the while loop to count for opening and closing
@@ -23,6 +23,9 @@ endif
 
 
 fun! pymode#folding#text() " {{{
+    if &foldmethod !=# 'foldexpr' && &foldmethod !=# 'manual'
+        return foldtext()
+    endif
     let fs = v:foldstart
     while getline(fs) !~ s:def_regex && getline(fs) !~ s:doc_begin_regex
         let fs = nextnonblank(fs + 1)
@@ -42,7 +45,7 @@ fun! pymode#folding#text() " {{{
     let line = substitute(line, '\t', onetab, 'g')
 
     let line = strpart(line, 0, windowwidth - 2 -len(foldedlinecount))
-    let line = substitute(line, '[uUrR]\=\%("""\|''''''\)', '', '')
+    let line = substitute(line, '\%([fFuUrR]*\%("""\|''''''\)\)', '', '')
     let fillcharcount = windowwidth - len(line) - len(foldedlinecount) + 1
     return line . ' ' . repeat(s:symbol, fillcharcount) . ' ' . foldedlinecount
 endfunction "}}}
@@ -83,35 +86,37 @@ fun! pymode#folding#expr(lnum) "{{{
         if decorated
             return '='
         else
-            return ">".(indent / &shiftwidth + 1)
+            " Don't fold if def is a single line
+            if indent(nextnonblank(a:lnum + 1)) > indent
+                return ">".(indent / &shiftwidth + 1)
+            else
+                return '='
+            endif
         endif
     endif "}}}
 
     " Docstrings {{{
 
-    " TODO: A while loop now counts the number of open and closed folding in
-    " order to determine if it is a closing or opening folding.
-    " It is working but looks like it is an overkill.
-
-    " Notice that an effect of this is that other docstring matches will not
-    " be one liners.
-    if line =~ s:doc_line_regex
-        return "="
+    if line =~ s:doc_begin_regex && line !~ s:doc_line_regex && line !~ '\w.\+[fFrRuU]\?\%("""\|''''''\)\s*$'
+        let curpos = getpos('.')
+        try
+            call cursor(a:lnum, 0)
+            call search('\v\)\s*(\s*-\>.*)?:', 'bW')
+            let [startline, _] = searchpairpos('(', '', ')', 'b')
+            if getline(startline) =~ s:def_regex
+                let doc_begin_line = searchpos(s:doc_begin_regex, 'nW')[0]
+                if doc_begin_line == a:lnum
+                    return ">".(indent / &shiftwidth + 1)
+                endif
+            endif
+        finally
+            call setpos('.', curpos)
+        endtry
     endif
 
-    if line =~ s:doc_begin_regex
-            " echom 'just entering'
-        if s:Is_opening_folding(a:lnum)
-            " echom 'entering at line ' . a:lnum
-            return ">".(indent / &shiftwidth + 1)
-        endif
+    if line =~ s:doc_end_regex && line !~ s:doc_line_regex
+        return "<".(indent / &shiftwidth + 1)
     endif
-    if line =~ s:doc_end_regex
-        if !s:Is_opening_folding(a:lnum)
-            " echom 'leaving at line ' . a:lnum
-            return "<".(indent / &shiftwidth + 1)
-        endif
-    endif "}}}
 
     " Nested Definitions {{{
     " Handle nested defs but only for files shorter than
@@ -177,6 +182,10 @@ fun! pymode#folding#expr(lnum) "{{{
             return '='
         endif
     endif " }}}
+
+    if indent == 0
+        return 0
+    endif
 
     return '='
 

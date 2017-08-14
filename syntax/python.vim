@@ -1,5 +1,12 @@
 " vim: ft=vim:fdm=marker
 
+if index(['pxd', 'pxi', 'pyx', 'pyxbld'], expand('%:e')) != -1
+    if &l:syntax !=# 'cython'
+        set syntax=cython
+    endif
+    finish
+endif
+
 " Enable pymode syntax for python files
 call pymode#default('g:pymode', 1)
 call pymode#default('g:pymode_syntax', g:pymode)
@@ -129,7 +136,7 @@ endif
 " Decorators {{{
 " ==============
 
-    syn match   pythonDecorator "@" display nextgroup=pythonDottedName skipwhite
+    syn match   pythonDecorator "^\s*@" display nextgroup=pythonDottedName skipwhite
     syn match   pythonDottedName "[a-zA-Z_][a-zA-Z0-9_]*\(\.[a-zA-Z_][a-zA-Z0-9_]*\)*" display contained
     syn match   pythonDot        "\." display containedin=pythonDottedName
 
