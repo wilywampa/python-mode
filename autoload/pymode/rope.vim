@@ -22,7 +22,7 @@ fun! pymode#rope#complete(dot)
     else
         PymodePython rope.complete()
     endif
-    return pumvisible() ? "\<C-p>\<Down>" : ""
+    return pumvisible() ? "\<C-p>" : ""
 endfunction
 
 fun! pymode#rope#complete_on_dot() "{{{

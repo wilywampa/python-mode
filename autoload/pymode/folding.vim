@@ -6,20 +6,24 @@ let s:def_regex = g:pymode_folding_regex
 let s:blank_regex = '^\s*$'
 " Spyder, a very popular IDE for python has a template which includes
 " '@author:' ; thus the regex below.
-let s:decorator_regex = '^\s*@\(author:\)\@!'
-let s:docstring_line_regex = '^\s*[uUrR]\=\("""\|''''''\).\+\1\s*$'
-let s:docstring_begin_regex = '^\s*[uUrR]\=\%("""\|''''''\).*\S'
+let s:decorator_regex = '^\s*@\s*\w*\s*\((\|$\)'
+let s:docstring_begin_regex = '^\s*[uUrR]\=\%("""\|''''''\)'
 let s:docstring_end_regex = '\%("""\|''''''\)\s*$'
 " This one is needed for the while loop to count for opening and closing
 " docstrings.
 let s:docstring_general_regex = '\%("""\|''''''\)'
+let s:docstring_line_regex = '^\s*[uUrR]\=\("""\|''''''\).\+\1\s*$'
 let s:symbol = matchstr(&fillchars, 'fold:\zs.')  " handles multibyte characters
 if s:symbol == ''
     let s:symbol = ' '
 endif
 " ''''''''
 
+
 fun! pymode#folding#text() " {{{
+    if &foldmethod !=# 'foldexpr' && &foldmethod !=# 'manual'
+        return foldtext()
+    endif
     let fs = v:foldstart
     while getline(fs) !~ s:def_regex && getline(fs) !~ s:docstring_begin_regex
         let fs = nextnonblank(fs + 1)
@@ -39,7 +43,7 @@ fun! pymode#folding#text() " {{{
     let line = substitute(line, '\t', onetab, 'g')
 
     let line = strpart(line, 0, windowwidth - 2 -len(foldedlinecount))
-    let line = substitute(line, '[uUrR]\=\%("""\|''''''\)', '', '')
+    let line = substitute(line, '\%([fFuUrR]*\%("""\|''''''\)\)', '', '')
     let fillcharcount = windowwidth - len(line) - len(foldedlinecount) + 1
     return line . ' ' . repeat(s:symbol, fillcharcount) . ' ' . foldedlinecount
 endfunction "}}}
@@ -57,7 +61,7 @@ fun! pymode#folding#foldcase(lnum) "{{{
     " evaluated foldlevel: {'foldcase': 'case description', 'foldlevel': 1}.
 
     let l:foldcase = 'general'
-    let l:foldlevel = 0
+    let l:foldlevel = '='
 
     let line = getline(a:lnum)
     let indent = indent(a:lnum)
@@ -67,25 +71,21 @@ fun! pymode#folding#foldcase(lnum) "{{{
     " Decorators {{{
     if line =~ s:decorator_regex
         let l:foldcase = 'decorator declaration'
-        let l:foldlevel = '>'.(indent / &shiftwidth + 1)
+        let l:foldlevel = ">".(indent / &shiftwidth + 1)
         return {'foldcase': l:foldcase, 'foldlevel': l:foldlevel}
     endif "}}}
 
     " Definition {{{
     if line =~ s:def_regex
-
-        " TODO: obscure case.
         " If indent of this line is greater or equal than line below
         " and previous non blank line does not end with : (that is, is not a
         " definition)
         " Keep the same indentation
-        " xxx " if indent(a:lnum) >= indent(a:lnum+1)
-        " xxx "         \ && getline(prevnonblank(a:lnum)) !~ ':\s*$'
-        " xxx "     let l:foldcase = 'definition'
-        " xxx "     let l:foldlevel = '='
-        " xxx "     return {'foldcase': l:foldcase, 'foldlevel': l:foldlevel}
-        " xxx " endif
-
+        if indent(a:lnum) >= indent(a:lnum+1) && getline(prevnonblank(a:lnum)) !~ ':\s*$'
+            let l:foldcase = 'definition'
+            let l:foldlevel = '='
+            return {'foldcase': l:foldcase, 'foldlevel': l:foldlevel}
+        endif
         " Check if last decorator is before the last def
         let decorated = 0
         let lnum = a:lnum - 1
@@ -101,106 +101,130 @@ fun! pymode#folding#foldcase(lnum) "{{{
         if decorated
             let l:foldcase = 'decorated function declaration'
             let l:foldlevel = '='
+            return {'foldcase': l:foldcase, 'foldlevel': l:foldlevel}
         else
-            let l:foldcase = 'function declaration'
-            let l:foldlevel = '>'.(indent / &shiftwidth + 1)
+            " Don't fold if def is a single line
+            if indent(nextnonblank(a:lnum + 1)) > indent
+                let l:foldcase = 'function declaration'
+                let l:foldlevel = ">".(indent / &shiftwidth + 1)
+                return {'foldcase': l:foldcase, 'foldlevel': l:foldlevel}
+            else
+                let l:foldcase = 'one-liner function'
+                let l:foldlevel = '='
+                return {'foldcase': l:foldcase, 'foldlevel': l:foldlevel}
+            endif
         endif
-        return {'foldcase': l:foldcase, 'foldlevel': l:foldlevel}
     endif "}}}
 
     " Docstrings {{{
 
-    " TODO: A while loop now counts the number of open and closed folding in
-    " order to determine if it is a closing or opening folding.
-    " It is working but looks like it is an overkill.
-
-    " Notice that an effect of this is that other docstring matches will not
-    " be one liners.
-    if line =~ s:docstring_line_regex
-        let l:foldcase = 'one-liner docstring'
-        let l:foldlevel = '='
-        return {'foldcase': l:foldcase, 'foldlevel': l:foldlevel}
-    endif
-    if line =~ s:docstring_begin_regex
-        if s:Is_opening_folding(a:lnum)
-            let l:foldcase = 'open multiline docstring'
-            let l:foldlevel = 'a1'
-        endif
-        return {'foldcase': l:foldcase, 'foldlevel': l:foldlevel}
-    endif
-    if line =~ s:docstring_end_regex
-        if !s:Is_opening_folding(a:lnum)
-            let l:foldcase = 'close multiline docstring'
-            let l:foldlevel = 's1'
-        endif
-        return {'foldcase': l:foldcase, 'foldlevel': l:foldlevel}
-    endif "}}}
-
-    " Blocks. {{{
-    let s:save_cursor = getcurpos()
-    let line_block_start = s:BlockStart(a:lnum)
-    let line_block_end = s:BlockEnd(a:lnum)
-    let prev_line_block_start = s:BlockStart(a:lnum - 1)
-    if line !~ s:blank_regex
-        if line_block_start == prev_line_block_start
-                \ || a:lnum  - line_block_start == 1
-            let l:foldcase = 'non blank line; first line of block or part of it'
-            let l:foldlevel = '='
-        elseif indent < indent(prevnonblank(a:lnum - 1))
-            if indent == 0
-                let l:foldcase = 'non blank line; zero indent'
-                let l:foldlevel = 0
-            else
-                let l:foldcase = 'non blank line; non zero indent'
-                let l:foldlevel = indent(line_block_start) / &shiftwidth + 1
+    if line =~ s:docstring_begin_regex && line !~ s:docstring_line_regex && line !~ '\w.\+[fFrRuU]\?\%("""\|''''''\)\s*$'
+        let curpos = getpos('.')
+        try
+            call cursor(a:lnum, 0)
+            call search('\v\)\s*(\s*-\>.*)?:', 'bW')
+            let [startline, _] = searchpairpos('(', '', ')', 'b')
+            if getline(startline) =~ s:def_regex
+                let doc_begin_line = searchpos(s:docstring_begin_regex, 'nW')[0]
+                if doc_begin_line == a:lnum
+                    let l:foldcase = 'start of docstring'
+                    let l:foldlevel = ">".(indent / &shiftwidth + 1)
+                    return {'foldcase': l:foldcase, 'foldlevel': l:foldlevel}
+                endif
             endif
-        endif
-        call setpos('.', s:save_cursor)
-        return {'foldcase': l:foldcase, 'foldlevel': l:foldlevel}
-    else
-        call setpos('.', s:save_cursor)
+        finally
+            call setpos('.', curpos)
+        endtry
     endif
-    " endif " }}}
+
+    if line =~ s:docstring_end_regex && line !~ s:docstring_line_regex
+        let l:foldcase = 'open multiline docstring'
+        let l:foldlevel = "<".(indent / &shiftwidth + 1)
+        return {'foldcase': l:foldcase, 'foldlevel': l:foldlevel}
+    endif
+
+    " Nested Definitions {{{
+    " Handle nested defs but only for files shorter than
+    " g:pymode_folding_nest_limit lines due to performance concerns
+    if line('$') < g:pymode_folding_nest_limit && indent(prevnonblank(a:lnum))
+        let curpos = getpos('.')
+        try
+            let last_block = s:BlockStart(a:lnum)
+            let last_block_indent = indent(last_block)
+
+            " Check if last class/def is not indented and therefore can't be
+            " nested.
+            if last_block_indent
+                call cursor(a:lnum, 0)
+                let next_def = searchpos(s:def_regex, 'nW')[0]
+                let next_def_indent = next_def ? indent(next_def) : -1
+                let last_block_end = s:BlockEnd(last_block)
+
+                " If the next def has greater indent than the previous def, it
+                " is nested one level deeper and will have its own fold. If
+                " the class/def containing the current line is on the first
+                " line it can't be nested, and if this block ends on the last
+                " line, it contains no trailing code that should not be
+                " folded. Finally, if the next non-blank line after the end of
+                " the previous def is less indented than the previous def, it
+                " is not part of the same fold as that def. Otherwise, we know
+                " the current line is at the end of a nested def.
+                if next_def_indent <= last_block_indent && last_block > 1 && last_block_end < line('$')
+                    \ && indent(nextnonblank(last_block_end)) >= last_block_indent
+
+                    " Include up to one blank line in the fold
+                    if getline(last_block_end) =~ s:blank_regex
+                        let fold_end = min([prevnonblank(last_block_end - 1), last_block_end]) + 1
+                    else
+                        let fold_end = last_block_end
+                    endif
+                    if a:lnum == fold_end
+                        let l:foldcase = 'after nested def'
+                        let l:foldlevel = 's1'
+                        return {'foldcase': l:foldcase, 'foldlevel': l:foldlevel}
+                    else
+                        let l:foldcase = 'inside nested def'
+                        let l:foldlevel = '='
+                        return {'foldcase': l:foldcase, 'foldlevel': l:foldlevel}
+                    endif
+                endif
+            endif
+        finally
+            call setpos('.', curpos)
+        endtry
+    endif " }}}
 
     " Blank Line {{{
-    " Comments: cases of blank lines:
-    " 1. After non blank line: gets folded with previous line.
-    " 1. Just after a block; in this case it gets folded with the block.
-    " 1. Between docstrings and imports.
-    " 1. Inside docstrings.
-    " 2. Inside functions/methods.
-    " 3. Between functions/methods.
     if line =~ s:blank_regex
-        if prev_line !~ s:blank_regex
-            let l:foldcase = 'blank line after non blank line'
-            let l:foldlevel = '='
+        if prev_line =~ s:blank_regex
+            if indent(a:lnum + 1) == 0 && next_line !~ s:blank_regex && next_line !~ s:docstring_general_regex
+                if s:Is_opening_folding(a:lnum)
+                    " echom a:lnum
+                    let l:foldcase = 'case 1'
+                    let l:foldlevel = "="
+                    return {'foldcase': l:foldcase, 'foldlevel': l:foldlevel}
+                else
+                    " echom "not " . a:lnum
+                    let l:foldcase = 'case 2'
+                    let l:foldlevel = 0
+                    return {'foldcase': l:foldcase, 'foldlevel': l:foldlevel}
+                endif
+            endif
+            let l:foldcase = 'case 3'
+            let l:foldlevel = -1
             return {'foldcase': l:foldcase, 'foldlevel': l:foldlevel}
-        elseif a:lnum > line_block_start && a:lnum < line_block_end
-            let l:foldcase = 'blank line inside block'
+        else
+            let l:foldcase = 'case 4'
             let l:foldlevel = '='
             return {'foldcase': l:foldcase, 'foldlevel': l:foldlevel}
         endif
-        " if prev_line =~ s:blank_regex
-        "     if indent(a:lnum + 1) == 0 && next_line !~ s:blank_regex && next_line !~ s:docstring_general_regex
-        "         if s:Is_opening_folding(a:lnum)
-        "             let l:foldcase = 'case 1'
-        "             let l:foldlevel = '='
-        "             return {'foldcase': l:foldcase, 'foldlevel': l:foldlevel}
-        "         else
-        "             let l:foldcase = 'case 2'
-        "             let l:foldlevel = 0
-        "             return {'foldcase': l:foldcase, 'foldlevel': l:foldlevel}
-        "         endif
-        "     endif
-        "     let l:foldcase = 'case 3'
-        "     let l:foldlevel = -1
-        "     return {'foldcase': l:foldcase, 'foldlevel': l:foldlevel}
-        " else
-        "     let l:foldcase = 'case 4'
-        "     let l:foldlevel = '='
-        "     return {'foldcase': l:foldcase, 'foldlevel': l:foldlevel}
-        " endif
     endif " }}}
+
+    if indent == 0
+        let l:foldcase = 'general with no indent'
+        let l:foldlevel = 0
+        return {'foldcase': l:foldcase, 'foldlevel': l:foldlevel}
+    endif
 
     return {'foldcase': l:foldcase, 'foldlevel': l:foldlevel}
 
