@@ -325,6 +325,10 @@ function! s:Is_opening_folding(lnum) "{{{
 
         let i_line = getline(i)
 
+        if i_line =~ s:docstring_line_regex 
+            continue
+        endif
+
         if i_line =~ s:docstring_begin_regex && ! has_open_docstring
             " This causes the loop to continue if there is a triple quote which
             " is not a docstring.
@@ -342,8 +346,6 @@ function! s:Is_opening_folding(lnum) "{{{
         elseif i_line =~ s:docstring_general_regex
             let extra_docstrings = extra_docstrings + 1
         endif
-
-        call add(b:fold_cache, fold_odd_even % 2)
 
     endfor
 
