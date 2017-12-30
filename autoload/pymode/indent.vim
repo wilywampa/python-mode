@@ -142,6 +142,7 @@ endfunction
 function! s:SearchParensPair() " {{{
     let [bufnum, line, col, off] = getpos('.')
     let stopline = max([1, line - 50])
+    let timeout = 2000  " milliseconds
 
     " Skip strings and comments
     let skip = 'getline(".") =~ "^\\s*#" || '.
@@ -149,13 +150,13 @@ function! s:SearchParensPair() " {{{
         \ '"string\\|comment\\|doctest"'
 
     " Search for parentheses
-    let [parlnum, parcol] = searchpairpos('(', '', ')', 'bnW', skip, stopline)
+    let [parlnum, parcol] = searchpairpos('(', '', ')', 'bnW', skip, stopline, timeout)
 
     " Search for brackets
-    let [par2lnum, par2col] = searchpairpos('\[', '', '\]', 'bnW', skip, stopline)
+    let [par2lnum, par2col] = searchpairpos('\[', '', '\]', 'bnW', skip, stopline, timeout)
 
     " Search for braces
-    let [par3lnum, par3col] = searchpairpos('{', '', '}', 'bnW', skip, stopline)
+    let [par3lnum, par3col] = searchpairpos('{', '', '}', 'bnW', skip, stopline, timeout)
 
     " Get the closest match
     let open = '('
