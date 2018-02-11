@@ -11,7 +11,7 @@ fun! pymode#breakpoint#init() "{{{
 
 from imp import find_module
 
-for module in ('wdb', 'pudb', 'ipdb'):
+for module in ('wdb', 'pudb', 'ipdb', 'pdb'):
     try:
         find_module(module)
         break
@@ -24,6 +24,10 @@ EOF
 endfunction "}}}
 
 fun! pymode#breakpoint#operate(lnum) "{{{
+    if g:pymode_breakpoint_cmd == ''
+        echoerr("g:pymode_breakpoint_cmd is empty")
+        return -1
+    endif
     call cursor(a:lnum, 0)
     if search(join(split(g:pymode_breakpoint_cmd, "\r"), '.*\n.*'), 'cn') == a:lnum
         execute "normal ".len(split(g:pymode_breakpoint_cmd, "\r"))."dd"
