@@ -82,7 +82,6 @@ endif
     syn keyword pythonStatement pass raise
     syn keyword pythonStatement global nonlocal assert
     syn keyword pythonStatement yield
-    syn keyword pythonLambdaExpr lambda
     syn keyword pythonStatement with as
 
     syn keyword pythonStatement def nextgroup=pythonFunction skipwhite
@@ -91,6 +90,7 @@ endif
     syn match pythonParameters "[^,]*" contained contains=pythonParam skipwhite
     syn match pythonParam "[^,]*" contained contains=pythonExtraOperator,pythonLambdaExpr,pythonBuiltinObj,pythonBuiltinType,pythonConstant,pythonString,pythonNumber,pythonBrackets,pythonSelf,pythonComment skipwhite
     syn match pythonBrackets "{[(|)]}" contained skipwhite
+    syn match pythonLambdaExpr "\<lambda[^:]*:"he=s+6 contains=@pythonExpression nextgroup=@pythonExpression
 
     syn keyword pythonStatement class nextgroup=pythonClass skipwhite
     syn match pythonClass "\%(\%(class\s\)\s*\)\@<=\h\%(\w\|\.\)*" contained nextgroup=pythonClassVars
@@ -191,6 +191,11 @@ endif
     syn region pythonUniString  start=+[uU]"""+ end=+"""+ keepend contains=pythonEscape,pythonUniEscape,pythonEscapeError,pythonUniEscapeError,pythonDocTest2,pythonSpaceError,@Spell
     syn region pythonUniString  start=+[uU]'''+ end=+'''+ keepend contains=pythonEscape,pythonUniEscape,pythonEscapeError,pythonUniEscapeError,pythonDocTest,pythonSpaceError,@Spell
 
+    syn region pythonFString  start=+[fF]'+ skip=+\\\\\|\\'\|\\$+ excludenl end=+'+ end=+$+ keepend contains=pythonEscape,pythonUniEscape,pythonEscapeError,pythonUniEscapeError,@Spell
+    syn region pythonFString  start=+[fF]"+ skip=+\\\\\|\\"\|\\$+ excludenl end=+"+ end=+$+ keepend contains=pythonEscape,pythonUniEscape,pythonEscapeError,pythonUniEscapeError,@Spell
+    syn region pythonFString  start=+[fF]"""+ end=+"""+ keepend contains=pythonEscape,pythonUniEscape,pythonEscapeError,pythonUniEscapeError,pythonDocTest2,pythonSpaceError,@Spell
+    syn region pythonFString  start=+[fF]'''+ end=+'''+ keepend contains=pythonEscape,pythonUniEscape,pythonEscapeError,pythonUniEscapeError,pythonDocTest,pythonSpaceError,@Spell
+
     syn match  pythonUniEscape          "\\u\x\{4}" display contained
     syn match  pythonUniEscapeError     "\\u\x\{,3}\X" display contained
     syn match  pythonUniEscape          "\\U\x\{8}" display contained
@@ -224,7 +229,8 @@ endif
     " Str.format syntax
     if g:pymode_syntax_string_format
         syn match pythonStrFormat "{{\|}}" contained containedin=pythonString,pythonUniString,pythonRawString,pythonUniRawString
-        syn match pythonStrFormat "{\([a-zA-Z0-9_]*\|\d\+\)\(\.[a-zA-Z_][a-zA-Z0-9_]*\|\[\(\d\+\|[^!:\}]\+\)\]\)*\(![rs]\)\=\(:\({\([a-zA-Z_][a-zA-Z0-9_]*\|\d\+\)}\|\([^}]\=[<>=^]\)\=[ +-]\=#\=0\=\d*\(\.\d\+\)\=[bcdeEfFgGnoxX%]\=\)\=\)\=}" contained containedin=pythonString,pythonUniString,pythonRawString,pythonUniRawString
+        syn match pythonStrFormat "{\([a-zA-Z0-9_]*\|\d\+\)\(\.[a-zA-Z_][a-zA-Z0-9_]*\|\[\(\d\+\|[^!:\}]\+\)\]\)*\(![rs]\)\=\(:\({\([a-zA-Z_][a-zA-Z0-9_]*\|\d\+\)}\|\([^}]\=[<>=^]\)\=[ +-]\=#\=0\=\d*\(\.\d\+\)\=[bcdeEfFgGnoxX%]\=\)\=\)\=}" contained containedin=pythonString,pythonUniString,pythonRawString,pythonUniRawString,pythonFString
+        syn region pythonStrInterpRegion matchgroup=pythonStrInterpRegion start="{" end="}" extend contained containedin=pythonFString contains=@pythonFExpression
     endif
 
     " String templates
@@ -246,6 +252,51 @@ endif
         syn region pythonDocstring  start=+^\s*[uU]\?[rR]\?'''+ end=+'''+ keepend excludenl contains=pythonEscape,@Spell,pythonDoctest,pythonDocTest2,pythonSpaceError
     endif
 
+
+" }}}
+
+" Expressions {{{
+" ===============
+
+    syn cluster pythonExpression contains=
+        \ pythonLambdaExpr,
+        \ pythonStatement,
+        \ pythonRepeat,
+        \ pythonConditional,
+        \ pythonComment,
+        \ pythonOperator,
+        \ pythonNumber,
+        \ pythonHexNumber,
+        \ pythonOctNumber,
+        \ pythonBinNumber,
+        \ pythonFloat,
+        \ pythonOctError,
+        \ pythonHexError,
+        \ pythonBinError,
+        \ pythonString,
+        \ pythonRawString,
+        \ pythonUniString,
+        \ pythonUniRawString,
+        \ pythonFString,
+        \ pythonExClass,
+        \ pythonBuiltinObj,
+        \ pythonBuiltinFunc
+
+    syn cluster pythonFExpression contains=
+        \ pythonStatement,
+        \ pythonLambdaExpr,
+        \ pythonRepeat,
+        \ pythonConditional,
+        \ pythonOperator,
+        \ pythonNumber,
+        \ pythonHexNumber,
+        \ pythonOctNumber,
+        \ pythonBinNumber,
+        \ pythonFloat,
+        \ pythonString,
+        \ pythonBytes,
+        \ pythonBuiltinObj,
+        \ pythonBuiltinFunc
 
 " }}}
 
@@ -370,8 +421,10 @@ endif
     hi def link  pythonString       String
     hi def link  pythonDocstring    String
     hi def link  pythonUniString    String
+    hi def link  pythonFString      String
     hi def link  pythonRawString    String
     hi def link  pythonUniRawString String
+    hi def link  pythonStrInterpRegion Special
 
     hi def link  pythonEscape       Special
     hi def link  pythonEscapeError  Error
